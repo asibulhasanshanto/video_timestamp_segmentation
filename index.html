@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video-js.min.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@3.8.0/dist/videojs-contrib-eme.js"></script>
+
+    <!-- imoprt style.css -->
+    <link rel="stylesheet" href="./style.css" />
+    <title>Test VideJS DRM</title>
+  </head>
+  <body>
+    <div style="margin: 50px auto">
+      <video id="my-video" class="video-js"></video>
+    </div>
+
+    <div class="video_segment_popover">hi</div>
+
+    <script>
+      // set the segments according to the video
+      var segments = [
+        { start: 0, title: "section 0" },
+        {
+          start: 20,
+          title: "section 1",
+        },
+        {
+          start: 50,
+          title: "section 2",
+        },
+      ];
+      var timeEvent;
+      var touchedPopover = false;
+      var popover = document.querySelector(".video_segment_popover");
+      var player = videojs(
+        "my-video",
+        {
+          controls: true,
+          fluid: true,
+          html5: {
+            vhs: {
+              overrideNative: true,
+            },
+          },
+        },
+        function () {
+          var player = this;
+          player.eme();
+          player.src({
+            src: "https://cdn.bitmovin.com/content/assets/art-of-motion_drm/mpds/11331.mpd",
+            type: "application/dash+xml",
+            keySystems: {
+              "com.widevine.alpha":
+                "https://cwip-shaka-proxy.appspot.com/no_auth",
+            },
+          });
+
+          player.ready(function () {
+            player.tech(true).on("keystatuschange", function (event) {
+              // devide the seekbar into segments by adding a line
+              for (var i = 0; i < segments.length; i++) {
+                let line = document.createElement("div");
+                line.style.position = "absolute";
+                line.style.height = "100%";
+                line.style.width = "3px";
+                line.style.backgroundColor = "black";
+                line.style.left = `${
+                  (segments[i].start / player.duration()) * 100
+                }%`;
+                player.controlBar.progressControl.seekBar
+                  .el()
+                  .appendChild(line);
+              }
+            });
+
+            // on hover on seek bar
+            player.controlBar.progressControl.seekBar.on(
+              "mousemove",
+              function (event) {
+                // Clear the previous timeout event
+                clearTimeout(timeEvent);
+
+                var hoverTime =
+                  player.controlBar.progressControl.seekBar.calculateDistance(
+                    event
+                  ) * player.duration();
+
+                // get the segment that the hover time is in
+                var segment;
+                for (var i = 0; i < segments.length; i++) {
+                  if (hoverTime >= segments[i].start) {
+                    segment = segments[i];
+                  }
+                }
+                if (segment) {
+                  popover.style.display = "flex";
+                  popover.style.left = `${event.screenX - 50}px`;
+                  popover.innerHTML = segment.title;
+                  popover.attributes["data-segment"] = segment.start;
+                }
+
+                timeEvent = setTimeout(function () {
+                  if (!touchedPopover) {
+                    popover.style.display = "none";
+                  }
+                }, 1000);
+              }
+            );
+          });
+        }
+      );
+
+      popover.addEventListener("click", function () {
+        scrolltoX(popover.attributes["data-segment"]);
+      });
+      var scrolltoX = function (time) {
+        player.currentTime(time);
+      };
+      popover.addEventListener("mouseover", function () {
+        touchedPopover = true;
+      });
+      popover.addEventListener("mouseout", function () {
+        touchedPopover = false;
+        popover.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
