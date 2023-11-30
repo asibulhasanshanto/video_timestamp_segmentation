@@ -19,11 +19,9 @@
     <title>Test VideJS DRM</title>
   </head>
   <body>
-    <div style="margin: 50px auto">
+    <div style="margin: 50px auto; position: relative">
       <video id="my-video" class="video-js"></video>
     </div>
-
-    <div class="video_segment_popover">hi</div>
 
     <script>
       // set the segments according to the video
@@ -40,7 +38,9 @@
       ];
       var timeEvent;
       var touchedPopover = false;
-      var popover = document.querySelector(".video_segment_popover");
+      // create a popover to show the segment title with the class name video_segment_popover
+      var popover = document.createElement("div");
+      popover.className = "video_segment_popover";
       var player = videojs(
         "my-video",
         {
@@ -103,10 +103,15 @@
                 }
                 if (segment) {
                   popover.style.display = "flex";
-                  popover.style.left = `${event.screenX - 50}px`;
+                  popover.style.left = `${event.screenX - 150}px`;
                   popover.innerHTML = segment.title;
                   popover.attributes["data-segment"] = segment.start;
                 }
+
+                // add popover as a child of the seek bar
+                player.controlBar.progressControl.seekBar
+                  .el()
+                  .appendChild(popover);
 
                 timeEvent = setTimeout(function () {
                   if (!touchedPopover) {
@@ -120,9 +125,9 @@
       );
 
       popover.addEventListener("click", function () {
-        scrolltoX(popover.attributes["data-segment"]);
+        scrollToSegment(popover.attributes["data-segment"]);
       });
-      var scrolltoX = function (time) {
+      var scrollToSegment = function (time) {
         player.currentTime(time);
       };
       popover.addEventListener("mouseover", function () {

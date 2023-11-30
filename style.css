@@ -1,7 +1,7 @@
 .video_segment_popover {
-  position: relative;
+  position: absolute;
   background-color: #ffffff59;
-  z-index: 9999;
+  z-index: 99999;
   cursor: pointer;
   width: 100px;
   align-items: center;
@@ -9,8 +9,10 @@
   padding: 4px 8px;
   border-radius: 8px;
   display: none;
-  top: -100px;
+  left: -50px;
+  bottom: 10px;
 }
 .video_segment_popover:hover {
   background-color: #ffffff;
+  color: black;
 }
