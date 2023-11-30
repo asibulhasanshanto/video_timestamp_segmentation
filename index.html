@@ -124,7 +124,8 @@
         }
       );
 
-      popover.addEventListener("click", function () {
+      popover.addEventListener("click", function (event) {
+        event.stopPropagation();
         scrollToSegment(popover.attributes["data-segment"]);
       });
       var scrollToSegment = function (time) {
